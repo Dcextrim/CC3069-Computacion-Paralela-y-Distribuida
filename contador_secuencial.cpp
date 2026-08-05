@@ -7,13 +7,14 @@
 
 using namespace std;
 
-int main() {
-    string nombre_archivo = "data/texto.txt";
+int main(int argc, char* argv[]) {
+    // Si no se indica otro archivo, se usa el texto de prueba del proyecto.
+    string nombre_archivo = (argc >= 2) ? argv[1] : "texto.txt";
     ifstream archivo(nombre_archivo);
 
     // si no abre el archivo, se termina el programa
     if (!archivo.is_open()) {
-        cout << "No se pudo abrir el archivo" << endl;
+        cout << "No se pudo abrir el archivo: " << nombre_archivo << endl;
         return 1;
     }
 
@@ -27,7 +28,7 @@ int main() {
     while (getline(archivo, linea)) {
 
         // cambiamos los signos por espacios
-        for (int i = 0; i < linea.length(); i++) {
+        for (size_t i = 0; i < linea.length(); i++) {
             if (signos.find(linea[i]) != string::npos) {
                 linea[i] = ' ';
             }
@@ -51,7 +52,7 @@ int main() {
     // Se guarda cuantas veces aparece cada palabra
     map<string, int> frecuencias;
 
-    for (int i = 0; i < lista.size(); i++) {
+    for (size_t i = 0; i < lista.size(); i++) {
         palabra = lista[i];
 
         if (frecuencias.find(palabra) != frecuencias.end()) {
@@ -62,7 +63,7 @@ int main() {
     }
 
     // Se imprime el resultado final
-    for (auto elemento : frecuencias) {
+    for (const auto& elemento : frecuencias) {
         cout << elemento.first << ": " << elemento.second << endl;
     }
 
