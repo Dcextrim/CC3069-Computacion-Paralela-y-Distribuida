@@ -1,5 +1,7 @@
+#include <chrono>
 #include <fstream>
 #include <functional>
+#include <iomanip>
 #include <iostream>
 #include <map>
 #include <sstream>
@@ -72,6 +74,10 @@ int main(int argc, char* argv[]) {
         return 0;
     }
 
+    // La medicion del tiempo empieza cuando el texto ya esta cargado y 
+    // tokenizado y se incluye el overhead real de crear/unir hilos y combinar los resultados parciales.
+    const auto inicio_conteo = chrono::steady_clock::now();
+
     // Se crean antes los diccionarios locales. Cada hilo recibe uno
     // diferente, de modo que no es necesario usar mutex durante el conteo.
     vector<map<string, int>> frecuencias_locales(cantidad_hilos);
@@ -92,8 +98,8 @@ int main(int argc, char* argv[]) {
                            ref(frecuencias_locales[id]));
     }
 
-    // join funciona como barrera: la combinacion no empieza hasta que todos
-    // los hilos hayan terminado su conteo parcial.
+    // join funciona como barrera ya que la combinacion 
+    //no empieza hasta que todos los hilos hayan terminado su conteo parcial.
     for (thread& hilo : hilos) {
         hilo.join();
     }
@@ -106,6 +112,13 @@ int main(int argc, char* argv[]) {
             frecuencia_global[elemento.first] += elemento.second;
         }
     }
+
+    const auto fin_conteo = chrono::steady_clock::now();
+    const double tiempo_ms =
+        chrono::duration<double, milli>(fin_conteo - inicio_conteo).count();
+
+    cout << fixed << setprecision(6)
+         << "TIEMPO_PROCESAMIENTO_MS=" << tiempo_ms << '\n';
 
     // map mantiene las palabras ordenadas, igual que en la version secuencial.
     for (const auto& elemento : frecuencia_global) {

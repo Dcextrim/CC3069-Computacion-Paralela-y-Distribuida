@@ -1,4 +1,6 @@
+#include <chrono>
 #include <fstream>
+#include <iomanip>
 #include <iostream>
 #include <map>
 #include <sstream>
@@ -49,18 +51,25 @@ int main(int argc, char* argv[]) {
         return 0;
     }
 
+    // La medicion empieza cuando el texto ya esta cargado y tokenizado. Asi se
+    // mide la misma fase que en la version paralela y se excluyen lectura e
+    // impresion de resultados.
+    const auto inicio_conteo = chrono::steady_clock::now();
+
     // Se guarda cuantas veces aparece cada palabra
     map<string, int> frecuencias;
 
     for (size_t i = 0; i < lista.size(); i++) {
-        palabra = lista[i];
-
-        if (frecuencias.find(palabra) != frecuencias.end()) {
-            frecuencias[palabra] = frecuencias[palabra] + 1;
-        } else {
-            frecuencias[palabra] = 1;
-        }
+        // Misma operacion de actualizacion usada dentro de cada hilo.
+        frecuencias[lista[i]]++;
     }
+
+    const auto fin_conteo = chrono::steady_clock::now();
+    const double tiempo_ms =
+        chrono::duration<double, milli>(fin_conteo - inicio_conteo).count();
+
+    cout << fixed << setprecision(6)
+         << "TIEMPO_PROCESAMIENTO_MS=" << tiempo_ms << '\n';
 
     // Se imprime el resultado final
     for (const auto& elemento : frecuencias) {
