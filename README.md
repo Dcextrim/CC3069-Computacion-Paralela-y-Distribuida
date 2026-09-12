@@ -1,21 +1,59 @@
-# Integralmente Paralelos — Consultora HPC
+# Integralmente Paralelos — Integración numérica con OpenMP
 
-Solución del **Grupo 6** para el Parcial 1 de CC3069 — Computación Paralela y
-Distribuida. Se implementa el **Problema 2: integración numérica mediante una
-suma de Riemann**, tanto de forma secuencial como paralela con OpenMP.
+Proyecto final del **Grupo 6** para el Parcial 1 de CC3069 — Computación
+Paralela y Distribuida. La consultora HPC **Integralmente Paralelos** implementó
+el **Problema 2: integración numérica mediante una suma de Riemann**, comparando
+una solución secuencial con una versión paralela optimizada mediante OpenMP.
 
 ## Integrantes
 
 - **Daniel Chet - 231177**
 - **Dulce Ambrosio - 231143**
 
-## Solución
+El desarrollo, la metodología, las evidencias y el análisis completo se
+encuentran en el [informe final del parcial](<docs/Parcial 1 - Paralela.pdf>).
+
+## Contexto y datos
 
 Se aproxima el área de una función positiva y computacionalmente exigente en el
 intervalo `[0, 10]` usando por defecto `10^9` rectángulos y la regla del punto
-medio. La versión paralela distribuye iteraciones independientes con
-`schedule(static)` y combina las sumas parciales mediante `reduction(+:suma)`,
-sin compartir una variable modificable entre hilos.
+medio:
+
+```text
+f(x) = exp(-x/10) · (sin²(x) + cos²(2x) + sqrt(x+1) + ln(x+1))
+       + 1/(1+x²)
+
+h   = (b-a)/n
+xᵢ  = a + (i+0.5)h
+área ≈ h · Σ f(xᵢ),  i = 0, ..., n-1
+```
+
+La función combina operaciones trigonométricas, exponenciales, logarítmicas y
+algebraicas, por lo que cada iteración contiene suficiente trabajo para
+amortizar el costo de OpenMP. Los puntos se calculan bajo demanda: no se almacena
+un arreglo de mil millones de elementos. Se emplean índices de 64 bits y valores
+`double`, con memoria adicional `O(1)` en la versión secuencial.
+
+## Estrategia de paralelización
+
+La solución secuencial recorre todos los rectángulos y acumula sus alturas en
+una sola suma. La versión paralela conserva el mismo cálculo y utiliza:
+
+- `#pragma omp parallel` para crear el equipo de trabajadores una sola vez.
+- `#pragma omp for schedule(static)` para distribuir iteraciones de costo
+  uniforme con poco *overhead* y buen balance de carga.
+- `reduction(+:suma)` para proporcionar una suma privada a cada hilo y combinar
+  los resultados al final sin condiciones de carrera.
+- `default(none)` para exigir una clasificación explícita de las variables.
+- `omp_set_dynamic(0)` para respetar la cantidad de hilos solicitada durante los
+  experimentos y `omp_get_wtime()` para medir tiempo de pared.
+
+No se usa `critical` ni `atomic` dentro del ciclo, pues serializar mil millones
+de actualizaciones eliminaría el beneficio del paralelismo. La complejidad es
+`O(n)` secuencial y aproximadamente `O(n/p)` para `p` hilos, más el costo de
+crear el equipo y combinar las sumas parciales.
+
+## Estructura del repositorio
 
 ```text
 .
@@ -23,7 +61,7 @@ sin compartir una variable modificable entre hilos.
 ├── secuencial/    Implementación base
 ├── paralelo/      Implementación con OpenMP
 ├── scripts/       Compilación, pruebas y mediciones
-└── docs/          Informe, resultados y evidencias
+└── docs/          Informe final, CSV, gráficas y evidencias
 ```
 
 ## Requisitos
@@ -86,41 +124,95 @@ de 1, 2 y 4 hilos:
 .\scripts\test.ps1
 ```
 
-Cada integrante debe ejecutar sus propias mediciones en su computadora. Por
-ejemplo, si el equipo tiene 8 hilos lógicos:
+La prueba valida el área contra un valor numérico de referencia y comprueba que
+las ejecuciones paralelas de 1, 2 y 4 hilos mantengan un error relativo menor que
+`10⁻¹¹`. El área obtenida con `10⁹` rectángulos fue aproximadamente
+`30.80821253644`.
 
-```powershell
-.\scripts\benchmark.ps1 `
-  -Integrante "nombre_apellido" `
-  -Rectangulos 1000000000 `
-  -Repeticiones 5 `
-  -Hilos 1,2,4,8
+## Metodología experimental
+
+Cada integrante ejecutó su campaña en su propia computadora con estas
+condiciones:
+
+- `10⁹` rectángulos por corrida.
+- Cinco repeticiones secuenciales y cinco por cada cantidad de hilos.
+- Una ejecución corta de calentamiento que no se incluyó en las métricas.
+- Los mismos binarios compilados con `-O3 -march=native`; la versión paralela
+  agrega `-fopenmp`.
+- La mediana como medida de tiempo para reducir el efecto de interrupciones
+  ocasionales del sistema operativo.
+
+Las métricas se calcularon de forma independiente en cada computadora:
+
+```text
+speedup(p)    = T_secuencial / T_paralelo(p)
+eficiencia(p) = speedup(p) / p · 100 %
 ```
 
-Con la política restrictiva, el comando equivalente es:
+## Resultados individuales
 
-```powershell
-powershell.exe -NoProfile -ExecutionPolicy Bypass `
-  -File .\scripts\benchmark.ps1 `
-  -Integrante "nombre_apellido" `
-  -Rectangulos 1000000000 `
-  -Repeticiones 5 `
-  -Hilos "1,2,4,8"
-```
+### Daniel Chet
 
-El script guarda las corridas crudas y el resumen de *speedup* y eficiencia en
-`docs/resultados/`. También imprime el resumen en pantalla para que cada
-integrante tome la captura solicitada. No deben comparar tiempos obtenidos en
-computadoras diferentes.
+Equipo de prueba: **Intel Core i9-13980HX, 24 núcleos y 32 hilos lógicos**.
 
-Opcionalmente, cada resumen se convierte en una gráfica SVG sin instalar
-paquetes de Python adicionales:
+Tiempo secuencial mediano: **37.29 s**.
 
-```powershell
-py .\scripts\graficar_resultados.py `
-  .\docs\resultados\nombre_apellido_resumen.csv `
-  --output .\docs\graficas\nombre_apellido.svg
-```
+| Hilos | Tiempo paralelo (s) | Speedup | Eficiencia | Error relativo máx. |
+|------:|---------------------:|--------:|-----------:|--------------------:|
+| 1  | 37.28 | 1.00  | 100.01 % | 0 |
+| 2  | 19.17 | 1.95  | 97.26 %  | 5.24 × 10⁻¹³ |
+| 4  | 9.89  | 3.77  | 94.27 %  | 1.98 × 10⁻¹² |
+| 8  | 5.46  | 6.83  | 85.36 %  | 1.99 × 10⁻¹² |
+| 16 | 3.78  | 9.85  | 61.59 %  | 2.00 × 10⁻¹² |
+| 32 | 2.64  | 14.11 | 44.09 %  | 1.99 × 10⁻¹² |
 
-El diseño, la metodología experimental y las tablas que deben completar están
-en [docs/informe.md](docs/informe.md).
+- [Corridas completas](docs/resultados/Daniel_Chet_corridas.csv)
+- [Resumen calculado](docs/resultados/Daniel_Chet_resumen.csv)
+- [Evidencia del inicio de la campaña](docs/evidencias/Captura%20de%20pantalla%202026-09-11%20181103.png)
+- [Evidencia del resumen final](docs/evidencias/Captura%20de%20pantalla%202026-09-11%20181202.png)
+
+![Speedup y eficiencia de Daniel Chet](docs/graficas/Daniel_Chet.svg)
+
+### Dulce Ambrosio
+
+Equipo de prueba: **Intel Core i7 de 12.ª generación, 14 núcleos, 20 hilos
+lógicos y 8 GB de RAM**.
+
+Tiempo secuencial mediano: **24.51 s**.
+
+| Hilos | Tiempo paralelo (s) | Speedup | Eficiencia | Error relativo máx. |
+|------:|---------------------:|--------:|-----------:|--------------------:|
+| 1  | 24.48 | 1.00 | 100.12 % | 0 |
+| 2  | 12.60 | 1.94 | 97.24 %  | 5.24 × 10⁻¹³ |
+| 4  | 6.27  | 3.91 | 97.74 %  | 1.98 × 10⁻¹² |
+| 8  | 3.83  | 6.41 | 80.08 %  | 1.99 × 10⁻¹² |
+| 16 | 2.85  | 8.60 | 53.77 %  | 2.00 × 10⁻¹² |
+| 20 | 2.72  | 9.02 | 45.10 %  | 1.98 × 10⁻¹² |
+
+- [Corridas completas](docs/resultados/Dulce_Ambrosio_corridas.csv)
+- [Resumen calculado](docs/resultados/Dulce_Ambrosio_resumen.csv)
+- [Evidencia de ejecución y resultados](docs/evidencias/Dulce.png)
+
+![Speedup y eficiencia de Dulce Ambrosio](docs/graficas/Dulce_Ambrosio.svg)
+
+## Análisis y conclusiones
+
+- La reducción de OpenMP produjo resultados numéricamente equivalentes a los de
+  la versión secuencial. El mayor error relativo observado fue cercano a
+  `2 × 10⁻¹²`, diferencia esperada porque la suma en punto flotante no es
+  asociativa y cambia su orden entre hilos.
+- Con 2 y 4 hilos se obtuvo escalamiento casi lineal. La eficiencia a 4 hilos fue
+  **94.27 %** para Daniel y **97.74 %** para Dulce, lo que confirma que
+  `schedule(static)` se adapta bien a la carga uniforme.
+- El menor tiempo de Daniel fue **2.64 s con 32 hilos**, un *speedup* de
+  **14.11×**. El menor tiempo de Dulce fue **2.72 s con 20 hilos**, un *speedup*
+  de **9.02×**.
+- Aunque el tiempo siguió disminuyendo al agregar hilos, la eficiencia bajó por
+  los costos de coordinación, la reducción final y la competencia por recursos
+  compartidos del procesador. Por ello, más hilos mejoran el rendimiento total,
+  pero no de manera proporcional indefinidamente.
+
+En conjunto, las mediciones muestran que la suma de Riemann es altamente
+paralelizable cuando el número de rectángulos es grande y que una reducción, en
+lugar de sincronizar cada actualización, permite obtener una mejora sustancial
+sin sacrificar la precisión del resultado.
