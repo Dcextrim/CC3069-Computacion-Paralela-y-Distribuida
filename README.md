@@ -2,6 +2,12 @@
 
 Bienvenido al repositorio del curso: Computación Paralela y Distribuida.
 
+## Integrantes
+
+- Sebas Túnchez - 231359
+- Daniel Chet - 231177
+- Dulce Ambrosio - 231143
+
 En esta iniciativa académica se aprenden las características y competencias necesarias para realizar computación paralela y distribuida de sistemas a mediana y gran escala. Se exploran y aplican herramientas de fuente abierta (Open Source) de los diferentes modelos de computación paralela y distribuida:
 
 - Computación Paralela de memoria compartida (OpenMP)
