@@ -64,11 +64,20 @@ Se reemplaza `HT2_inciso1` por el inciso correspondiente y `<procesos>` por la c
 
 | Ejercicio | Descripción | Función(es) MPI clave | Estado |
 |---|---|---|---|
-| 1 | Reconocimiento de procesos y ranks | `MPI_Comm_rank`, `MPI_Comm_size` | Pendiente |
-| 2 | Comunicación directa oficina central - sucursal | `MPI_Send`, `MPI_Recv` | Pendiente |
-| 3 | Difusión de precio y descuento a todas las sucursales | `MPI_Bcast` | Pendiente |
-| 4 | Distribución de pedidos y empleados por sucursal | `MPI_Scatter` | Pendiente |
+| 1 | Reconocimiento de procesos y ranks | `MPI_Comm_rank`, `MPI_Comm_size` | Código completo (sin modificar, según enunciado) |
+| 2 | Comunicación directa oficina central - sucursal | `MPI_Send`, `MPI_Recv` | Código completo (ventas + pedidos con tags 100/200) |
+| 3 | Difusión de precio y descuento a todas las sucursales | `MPI_Bcast` | Código completo (precio + descuento en llamadas independientes) |
+| 4 | Distribución de pedidos y empleados por sucursal | `MPI_Scatter` | Código completo (sendcount/recvcount = 2, datos intercalados) |
+
+Los cuatro programas fueron compilados y ejecutados (vía WSL/Open MPI) con la
+cantidad de procesos indicada en cada ejercicio, confirmando que la salida
+coincide con lo solicitado en el enunciado.
+
+Pendiente para la entrega final: tomar las capturas de pantalla de
+compilación/ejecución de cada programa y armar el PDF de entrega.
 
 ### Preguntas de análisis
 
-Las respuestas a las preguntas de análisis de los cuatro ejercicios se agregarán a este README (o a un documento aparte) conforme se resuelva cada ejercicio.
+Las respuestas a las preguntas de análisis y las tablas de parámetros de los
+cuatro ejercicios están en
+[`respuestas-analisis.md`](respuestas-analisis.md).

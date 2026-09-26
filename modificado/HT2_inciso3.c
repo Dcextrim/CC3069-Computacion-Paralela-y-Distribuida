@@ -14,6 +14,10 @@
  *
  *              La Oficina Central define el nuevo precio y lo comunica
  *              a todas las sucursales utilizando MPI_Bcast().
+ *
+ * Modificacion: la Oficina Central tambien define un porcentaje de
+ *              descuento y lo distribuye a todas las sucursales
+ *              mediante una llamada independiente a MPI_Bcast().
  *----------------------------------------------------------------------*/
 
 #include <stdio.h>
@@ -24,6 +28,7 @@ int main(int argc, char *argv[]) {
     int rank;
     int size;
     float precio;
+    float descuento;
 
     // Inicializa el entorno MPI
     MPI_Init(&argc, &argv);
@@ -34,20 +39,25 @@ int main(int argc, char *argv[]) {
     // Obtener el numero total de procesos que participan
     MPI_Comm_size(MPI_COMM_WORLD, &size);
 
-    // La Oficina Central define el nuevo precio
+    // La Oficina Central define el nuevo precio y el descuento del dia
     if (rank == 0) {
         precio = 25.50;
+        descuento = 10.0;
 
         printf("Oficina Central: nuevo precio = Q%.2f\n", precio);
+        printf("Oficina Central: descuento = %.2f %%\n", descuento);
     }
 
     // La Oficina Central envia el precio a todos los procesos
     MPI_Bcast(&precio, 1, MPI_FLOAT, 0, MPI_COMM_WORLD);
 
-    // Cada sucursal muestra el precio recibido
+    // Llamada independiente para distribuir el descuento a todos los procesos
+    MPI_Bcast(&descuento, 1, MPI_FLOAT, 0, MPI_COMM_WORLD);
+
+    // Cada sucursal muestra el precio y el descuento recibidos
     if (rank != 0) {
-        printf("Sucursal %d: nuevo precio recibido = Q%.2f\n",
-               rank, precio);
+        printf("Sucursal %d: precio recibido = Q%.2f\n", rank, precio);
+        printf("Sucursal %d: descuento recibido = %.2f %%\n", rank, descuento);
     }
 
     // Finaliza correctamente el entorno MPI

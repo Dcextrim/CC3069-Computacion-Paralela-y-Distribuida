@@ -15,6 +15,11 @@
  *
  *              Utilizar MPI_Send() y MPI_Recv() para realizar
  *              comunicacion directa entre dos procesos.
+ *
+ * Modificacion: la Sucursal 1 ahora envia un segundo dato (la cantidad
+ *              de pedidos procesados durante el dia) usando un tag
+ *              distinto, para que la Oficina Central pueda identificar
+ *              y recibir cada mensaje por separado.
  *----------------------------------------------------------------------*/
 
 #include <stdio.h>
@@ -25,6 +30,7 @@ int main(int argc, char *argv[]) {
     int rank;
     int size;
     float ventas;
+    int pedidos;
 
     // Inicializa el entorno MPI: debe ejecutarse antes de utilizar otras funciones MPI
     MPI_Init(&argc, &argv);
@@ -46,14 +52,20 @@ int main(int argc, char *argv[]) {
         return 0;
     }
 
-    // La Sucursal 1 genera y envia su reporte de ventas
+    // La Sucursal 1 genera y envia su reporte de ventas y pedidos
     if (rank == 1) {
 
         ventas = 1250.75;
+        pedidos = 48;
 
         printf("Sucursal 1: ventas del dia = Q%.2f\n", ventas);
+        printf("Sucursal 1: pedidos procesados = %d\n", pedidos);
 
+        // Tag 100 identifica el mensaje de ventas
         MPI_Send(&ventas, 1, MPI_FLOAT, 0, 100, MPI_COMM_WORLD);
+
+        // Tag 200 identifica el mensaje de pedidos, distinto al de ventas
+        MPI_Send(&pedidos, 1, MPI_INT, 0, 200, MPI_COMM_WORLD);
 
         printf("Sucursal 1: reporte enviado a Oficina Central.\n");
     }
@@ -61,10 +73,12 @@ int main(int argc, char *argv[]) {
     // La Oficina Central recibe el reporte enviado por la Sucursal 1
     if (rank == 0) {
 
-        MPI_Recv(&ventas, 1, MPI_FLOAT, 1, 100,MPI_COMM_WORLD, MPI_STATUS_IGNORE);
+        MPI_Recv(&ventas, 1, MPI_FLOAT, 1, 100, MPI_COMM_WORLD, MPI_STATUS_IGNORE);
+        MPI_Recv(&pedidos, 1, MPI_INT, 1, 200, MPI_COMM_WORLD, MPI_STATUS_IGNORE);
 
         printf("Oficina Central: reporte recibido.\n");
         printf("Ventas reportadas por Sucursal 1: Q%.2f\n", ventas);
+        printf("Pedidos procesados por Sucursal 1: %d\n", pedidos);
     }
 
     // Finaliza correctamente el entorno MPI
