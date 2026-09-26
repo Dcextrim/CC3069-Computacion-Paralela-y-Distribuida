@@ -18,10 +18,11 @@ En este repositorio se encuentran las actividades como Laboratorios, Hojas de Tr
 
 ## Estructura del Repositorio
 
-Este repositorio se maneja con base en *Branches*. Cada *branch* corresponde a una actividad y contiene su propio archivo `README.md` de documentación y/o con respuestas a preguntas de ejercicios, links a videos solicitados, etc.
+Este repositorio se maneja con base en *branches*. La rama `main` es la rama principal y contiene la referencia general del repositorio, mientras que las demás branches organizan las actividades del curso. Cada branch corresponde a una actividad y contiene su propio archivo `README.md` con documentación, respuestas a preguntas de ejercicios, enlaces a videos solicitados y otros recursos.
 
 ### Branches
 
 - `main`: rama principal del repositorio
+- `Parcial-1`: Evaluación Parcial 1
 - `Evaluacion-Corta-2`: Paralelización del Algoritmo de Conteo de Frecuencia de Palabras
 - `Hoja-de-Trabajo-1`: Análisis de *Speedup* y Eficiencia en la Paralelización del Conteo de Palabras
