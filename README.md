@@ -16,7 +16,7 @@ Ejecutar programas Open MPI de forma local e identificar el uso de funciones fun
 │   ├── HT2_inciso2.c
 │   ├── HT2_inciso3.c
 │   └── HT2_inciso4.c
-└── modificado/                  # Código a entregar, con las modificaciones pedidas en cada ejercicio
+└── modificado/                  # Código con las modificaciones pedidas
     ├── HT2_inciso2.c
     ├── HT2_inciso3.c
     └── HT2_inciso4.c
