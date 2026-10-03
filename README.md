@@ -1,52 +1,71 @@
-# Hoja de Trabajo 02 - Introducción a Open MPI
+# CC3069 - Computación Paralela y Distribuida
 
 ## Integrantes
 - Daniel Chet - 231177
 - Dulce Ambrosio - 231143
 
+## Descripción
+
+Este repositorio contiene ejercicios de introducción a Open MPI desarrollados para la clase de Computación Paralela y Distribuida. Los programas muestran el uso de primitivas de comunicación colectiva para sincronizar y compartir datos entre varios procesos.
+
 ## Objetivo
 
-Ejecutar programas Open MPI de forma local e identificar el uso de funciones fundamentales para reconocer procesos, realizar comunicación punto a punto, difundir información y distribuir datos entre varios procesos.
+- Comprender el modelado de procesos con MPI.
+- Ejecutar programas distribuidos localmente con `mpicc` y `mpirun`.
+- Aplicar funciones MPI como `MPI_Gather` y `MPI_Reduce` en escenarios de simulación.
+- Analizar la salida de cada proceso y validar el comportamiento colectivo del sistema.
 
-## Estructura de este branch
+## Estructura del repositorio
 
+```text
+.
+├── README.md
+├── original/
+│   ├── Ejercicio1a.c
+│   └── Ejercicio1b.c
+├── modificado/
+│   ├── Ejercicio1a.c
+│   └── Ejercicio1b.c
+├── doc/
+│   ├── Ejercicio1a.c
+│   ├── Ejercicio1b.c
+│   └── Ejercicio 30 Septiembre - Paralela.pdf
+└── .gitignore
 ```
-├── original/                    # Código base entregado, sin modificar (referencia)
-│   ├── HT2_inciso1.c
-│   ├── HT2_inciso2.c
-│   ├── HT2_inciso3.c
-│   └── HT2_inciso4.c
-└── modificado/                  # Código a entregar, con las modificaciones pedidas en cada ejercicio
-    ├── HT2_inciso2.c
-    ├── HT2_inciso3.c
-    └── HT2_inciso4.c
-```
 
-`HT2_inciso1.c` solo existe en `original/` porque ese ejercicio no requiere modificación (únicamente verificar `MPI_COMM_WORLD` y el rank de cada proceso).
+- `original/`: versión base de referencia.
+- `modificado/`: versión con cambios realizados para el ejercicio asignado.
+- `doc/`: documentación y archivos relacionados con el trabajo.
+
+## Ejercicios incluidos
+
+| Ejercicio | Descripción | Función MPI principal |
+|---|---|---|
+| 1a | Recolección de temperaturas registradas por cada sucursal. | `MPI_Gather` |
+| 1b | Cálculo del consumo total, máximo y mínimo entre distintas sucursales. | `MPI_Reduce` |
 
 ## Compilación y ejecución
 
-```bash
-mpicc original/HT2_inciso1.c -o HT2_inciso1
-mpirun -np <procesos> ./HT2_inciso1
-```
-
-Para los incisos 2, 3 y 4 se compila el archivo correspondiente dentro de `modificado/`, por ejemplo:
+### Ejemplo general
 
 ```bash
-mpicc modificado/HT2_inciso2.c -o HT2_inciso2
-mpirun -np <procesos> ./HT2_inciso2
+mpicc modificado/Ejercicio1a.c -o ejercicio1a
+mpirun -np 4 ./ejercicio1a
 ```
 
-Se reemplaza `HT2_incisoN` por el ejercicio correspondiente y `<procesos>` por la cantidad de procesos indicada en cada ejercicio (2, 4 o 6 según el caso).
+```bash
+mpicc modificado/Ejercicio1b.c -o ejercicio1b
+mpirun -np 4 ./ejercicio1b
+```
 
-## Ejercicios
+> El número de procesos puede variar según la lógica del ejercicio, pero en estos ejemplos se utiliza 4 procesos para representar 4 sucursales/ubicaciones.
 
-| Ejercicio | Descripción | Función(es) MPI clave | Estado |
-|---|---|---|---|
-| 1 | Reconocimiento de procesos y ranks | `MPI_Comm_rank`, `MPI_Comm_size` | Código completo (sin modificar, según enunciado) |
-| 2 | Comunicación directa oficina central - sucursal | `MPI_Send`, `MPI_Recv` | Código completo (ventas + pedidos con tags 100/200) |
-| 3 | Difusión de precio y descuento a todas las sucursales | `MPI_Bcast` | Código completo (precio + descuento en llamadas independientes) |
-| 4 | Distribución de pedidos y empleados por sucursal | `MPI_Scatter` | Código completo (sendcount/recvcount = 2, datos intercalados) |
+## Requisitos
 
-Los cuatro programas fueron compilados y ejecutados (vía WSL/Open MPI) con la cantidad de procesos indicada en cada ejercicio, confirmando que la salida coincide con lo solicitado en el enunciado.
+- Open MPI instalado en el sistema.
+- Entorno compatible con WSL, Linux o macOS.
+- Compilador `gcc`/`mpicc` disponible en el PATH.
+
+## Notas
+
+Los ejercicios fueron desarrollados y probados con ejecución local usando Open MPI, verificando que la salida de cada proceso coincide con la lógica pedida en el enunciado del trabajo.
