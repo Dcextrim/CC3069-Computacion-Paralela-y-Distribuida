@@ -1,10 +1,9 @@
 /*----------------------------------------------------------------------
  * Universidad del Valle de Guatemala
  * Curso:     CC3169 - Computacion Paralela y Distribuida
- * Ejercicio: Hoja de Trabajo 02 - Introduccion a Open MPI
- *            Inciso 4
- * Descripcion: simulacion de la distribucion de pedidos desde la
- *              Oficina Central hacia las sucursales.
+ * Ejercicio: Ejercicio30Septiembre - Introduccion a Open MPI
+ * Descripcion: simulacion de la recoleccion de temperaturas
+ *              registradas en diferentes sucursales.
  *
  *              Cada proceso MPI representa una ubicacion diferente:
  *                  rank 0 -> Oficina central
@@ -12,9 +11,9 @@
  *                  rank 2 -> Sucursal 2
  *                  rank 3 -> Sucursal 3
  *
- *              La Oficina Central posee una lista de pedidos y
- *              distribuye una parte a cada proceso utilizando
- *              MPI_Scatter().
+ *              Cada proceso genera una temperatura local y la
+ *              Oficina Central recopila todos los valores utilizando
+ *              MPI_Gather().
  *----------------------------------------------------------------------*/
 
 #include <stdio.h>
@@ -24,8 +23,8 @@ int main(int argc, char *argv[]) {
 
     int rank;
     int size;
-    int pedidos[4];
-    int pedido_recibido;
+    float temperatura;
+    float temperaturas[4];
 
     // Inicializa el entorno MPI
     MPI_Init(&argc, &argv);
@@ -47,36 +46,40 @@ int main(int argc, char *argv[]) {
         return 0;
     }
 
-    // La Oficina Central define la cantidad de pedidos para cada ubicacion
+    // Cada proceso registra una temperatura local
     if (rank == 0) {
-
-        pedidos[0] = 120;
-        pedidos[1] = 95;
-        pedidos[2] = 140;
-        pedidos[3] = 110;
-
-        printf("Oficina Central: distribuyendo pedidos...\n");
+        temperatura = 24.5;
+    } else if (rank == 1) {
+        temperatura = 26.1;
+    } else if (rank == 2) {
+        temperatura = 23.8;
+    } else {
+        temperatura = 27.0;
     }
 
-    // Distribuir un valor del arreglo a cada proceso
-    MPI_Scatter(
-        pedidos,
+    printf("Proceso %d: temperatura registrada = %.1f C\n",
+           rank, temperatura);
+
+    // Reunir las temperaturas de todos los procesos en rank 0
+    MPI_Gather(
+        &temperatura,
         1,
-        MPI_INT,
-        &pedido_recibido,
+        MPI_FLOAT,
+        temperaturas,
         1,
-        MPI_INT,
+        MPI_FLOAT,
         0,
         MPI_COMM_WORLD
     );
 
-    // Cada proceso muestra el valor que recibio
+    // La Oficina Central muestra todas las temperaturas recibidas
     if (rank == 0) {
-        printf("Oficina Central: %d pedidos asignados.\n",
-               pedido_recibido);
-    } else {
-        printf("Sucursal %d: %d pedidos asignados.\n",
-               rank, pedido_recibido);
+
+        printf("\nOficina Central: temperaturas recibidas\n");
+
+        for (int i = 0; i < size; i++) {
+            printf("Proceso %d: %.1f C\n", i, temperaturas[i]);
+        }
     }
 
     // Finaliza correctamente el entorno MPI
